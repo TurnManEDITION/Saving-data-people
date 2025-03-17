@@ -2,6 +2,14 @@ import java.io.*;
 import java.security.MessageDigest;
 import java.util.Scanner;
 
+
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.*;
 
@@ -34,7 +42,17 @@ public class Main {
     public static void write() throws Exception {
         long max_day = 0;
         // Обращение к json файлу и сохранение данных в переменную
-        JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
+        try {
+            JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
+        } catch (FileNotFoundException e) {
+            URL link = new URL("https://raw.githubusercontent.com/TurnManEDITION/Saving-data-people/refs/heads/main/days.json");
+            println("Error! File not found! \n" +
+                    "Download file: " + link +
+                    "Please RESTART Code!");
+            downloadFile(link, "src/days.json");
+            System.exit(0);
+        }
+
         String[] snp = new String[3];
         int[] dmy = {0, 0, 0};
         int i = 0;
@@ -60,13 +78,13 @@ public class Main {
                         println("Error");
                         print("Enter birth " + dmy_choice[i] + ": ");
                     }
-
                 }
 
                 if (i == 2) {
                     i -= 1;
                 }
                 if (i == 1 & 0 < dmy[1] & dmy[1] <= 12) {
+                    JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
                     if (dmy[2] % 4 == 0 && dmy[1] == 2) {
                         // взятие определённого параметра из json файла
                         max_day = (long) jsonObject.get(String.valueOf(dmy[1])) + 1;
@@ -85,12 +103,25 @@ public class Main {
                 }
             }
         }
+
+        // Описание
+        String addition = "";
+        String description = "";
+        println("Description: (exit to exit)");
+        while (true) {
+            addition = inputStr();
+            if (addition.toLowerCase().equals("exit")) {
+                break;
+            }
+            description += addition + "\n";
+        }
+
         // Запись определённых данных в одну переменную
         String snp_data = snp[0] + snp[1] + snp[2];
         String name_file = gen_name_file(snp_data);
         String dmy_data = re_dmy(String.valueOf(dmy[0]), String.valueOf(dmy[1]), String.valueOf(dmy[2]));
 
-        String all_data = data(snp, dmy_data);
+        String all_data = data(snp, dmy_data, description);
         try {
             // Создание переменной файла
             File file = new File(name_file + ".hex");
@@ -174,12 +205,22 @@ public class Main {
         return str;
     }
 
-    public static String data(String[] snp, String dmy_data) {
+    public static String data(String[] snp, String dmy_data, String description) {
         // Возврат данных, как должны выглядеть
         return ("Surname: " + snp[0] + "\n" +
                 "Name: " + snp[1] + "\n" +
                 "Patronymic: " + snp[2] + "\n" +
-                "Birth: " + dmy_data);
+                "Birth: " + dmy_data) + "\n" +
+                "Description: \n" + description;
+    }
+
+    public static void downloadFile(URL url, String outputFileName) throws IOException
+    {
+        try (InputStream in = url.openStream();
+             ReadableByteChannel rbc = Channels.newChannel(in);
+             FileOutputStream fos = new FileOutputStream(outputFileName)) {
+            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
+        }
     }
 
     public static String re_dmy(String d, String m, String y) {
@@ -196,7 +237,7 @@ public class Main {
             y = "20" + y;
         }
         if (y.length() == 2 & Integer.parseInt(y) > 25) {
-            y = "20" + y;
+            y = "19" + y;
         }
         return d + "." + m + "." + y;
     }
