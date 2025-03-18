@@ -45,7 +45,7 @@ public class Main {
         try {
             JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
         } catch (FileNotFoundException e) {
-            URL link = new URL("https://raw.githubusercontent.com/TurnManEDITION/Saving-data-people/refs/heads/main/days.json");
+            URL link = new URL("https://raw.githubusercontent.com/TurnManEDITION/Saving-data-people-java/refs/heads/main/days.json");
             println("Error! File not found! \n" +
                     "Download file: " + link +
                     "Please RESTART Code!");
