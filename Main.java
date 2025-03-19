@@ -1,12 +1,15 @@
+// javac -cp json-simple-1.1.1.jar -Xlint:deprecation Main.java
+// java -cp .;json-simple-1.1.1.jar Main
 import java.io.*;
+import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.util.Scanner;
-
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.net.URI;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 
@@ -16,41 +19,69 @@ import org.json.simple.parser.*;
 
 public class Main {
     public static void main(String[] args) throws Exception {
+        String[] status;
         while (true) {
-            print("Enter method(Write|Read): ");
+            print("\033[H\033[J\u001B[0mEnter method(Write|Read): \u001B[32m"); // gh
             String answer = inputStr().toLowerCase();
             if (answer.equals("write") | answer.equals("w")) {
-                write();
+                status = write();
+                if (status[1].equals("green"))
+                {
+                    print("\u001B[32m");
+                }
+                else if (status[1].equals("red"))
+                {
+                    print("\u001B[31m");
+                }
+                println("\033[H\033[JStatus: " + status[0] + "\u001B[31m");
+                Thread.sleep(3000);
+                print("\033[H\033[J");
             } else if (answer.equals("read") | answer.equals("r")) {
                 String[] snp = new String[3];
                 int i = 0;
                 while (i != 3) {
                     do {
                         String[] snp_choice = {"surname", "name", "patronymic"};
-                        print("Enter " + snp_choice[i] + ": ");
+                        print("\033[H\033[J\u001B[0mEnter " + snp_choice[i] + ": \u001B[32m");
                         snp[i] = inputStr();
                     } while (snp[i].isEmpty());
-                    i += 1;
+                    i++;
                 }
                 String snp_data = snp[0] + snp[1] + snp[2];
-                read(snp_data);
+                status = read(snp_data);
+                if (status[1].equals("green"))
+                {
+                    print("\u001B[32m");
+                }
+                else if (status[1].equals("red"))
+                {
+                    print("\u001B[31m");
+                }
+                println("\033[H\033[JStatus: " + status[0] + "\u001B[31m");
+                Thread.sleep(3000);
+                print("\033[H\033[J");
             } else {
                 println("Error");
             }
         }
     }
-    public static void write() throws Exception {
+    public static String[] write() throws Exception {
         long max_day = 0;
-        // Обращение к json файлу и сохранение данных в переменную
         try {
-            JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
+            JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("days.json");
         } catch (FileNotFoundException e) {
-            URL link = new URL("https://raw.githubusercontent.com/TurnManEDITION/Saving-data-people-java/refs/heads/main/days.json");
-            println("Error! File not found! \n" +
-                    "Download file: " + link +
-                    "Please RESTART Code!");
-            downloadFile(link, "src/days.json");
-            System.exit(0);
+            URI uri = new URI("https://raw.githubusercontent.com/TurnManEDITION/Saving-data-people-java/refs/heads/main/days.json");
+            URL link = uri.toURL();
+            println("\033[H\033[J\u001B[31mError! File not found! \n" +
+                    "\u001B[0mDownload file: \u001B[35m" + link);
+            try {
+                downloadFile(link, "days.json");
+                Thread.sleep(3000);
+                print("\033[H\033[J");
+            } catch (UnknownHostException exception) {
+                Thread.sleep(3000);
+                return new String[] {"not connection.", "red"};
+            }
         }
 
         String[] snp = new String[3];
@@ -59,24 +90,24 @@ public class Main {
         while (i != 3) {
             do {
                 String[] snp_choice = {"surname", "name", "patronymic"};
-                print("Enter " + snp_choice[i] + ": ");
+                print("\033[H\033[J\u001B[0mEnter " + snp_choice[i] + ": \u001B[32m");
                 snp[i] = inputStr();
             } while (snp[i].isEmpty());
-            i += 1;
+            i++;
         }
         i = 2;
 
         while (i != -1) {
             while (true) {
                 String[] dmy_choice = {"day", "month", "year"};
-                print("Enter birth " + dmy_choice[i] + ": ");
+                print("\033[H\033[J\u001B[0mEnter birth " + dmy_choice[i] + ": \u001B[32m");
                 while (true) {
                     try {
                         dmy[i] = inputInt();
                         break;
                     } catch (Exception e) {
                         println("Error");
-                        print("Enter birth " + dmy_choice[i] + ": ");
+                        print("\033[H\033[J\u001B[0mEnter birth " + dmy_choice[i] + ": \u001B[32m");
                     }
                 }
 
@@ -84,30 +115,27 @@ public class Main {
                     i -= 1;
                 }
                 if (i == 1 & 0 < dmy[1] & dmy[1] <= 12) {
-                    JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("src/days.json");
+                    JSONObject jsonObject = (JSONObject) readJsonSimpleDemo("days.json");
                     if (dmy[2] % 4 == 0 && dmy[1] == 2) {
-                        // взятие определённого параметра из json файла
                         max_day = (long) jsonObject.get(String.valueOf(dmy[1])) + 1;
                     } else {
-                        // взятие определённого параметра из json файла
                         max_day = (long) jsonObject.get(String.valueOf(dmy[1]));
                     }
-                    i -= 1;
+                    i--;
                     break;
                 }
                 if (i == 0) {
                     if (0 < dmy[i] & dmy[i] <= max_day) {
-                        i -= 1;
+                        i--;
                         break;
                     }
                 }
             }
         }
 
-        // Описание
         String addition = "";
         String description = "";
-        println("Description: (exit to exit)");
+        println("\033[H\033[J\u001B[0mDescription: (exit to exit)\u001B[32m");
         while (true) {
             addition = inputStr();
             if (addition.toLowerCase().equals("exit")) {
@@ -116,47 +144,37 @@ public class Main {
             description += addition + "\n";
         }
 
-        // Запись определённых данных в одну переменную
         String snp_data = snp[0] + snp[1] + snp[2];
         String name_file = gen_name_file(snp_data);
         String dmy_data = re_dmy(String.valueOf(dmy[0]), String.valueOf(dmy[1]), String.valueOf(dmy[2]));
 
         String all_data = data(snp, dmy_data, description);
-        try {
-            // Создание переменной файла
-            File file = new File(name_file + ".hex");
-            // Создание файла
-            if (file.createNewFile()) {
-                println("The file was created successfully!");
-            } else {
-                println("The data in the file has been changed!");
-            }
-        } catch (IOException e) {
-            println("Error when creating the file!");
-            e.printStackTrace();
-        }
-        try {
-            String hashed_data = hashed(all_data);
-            // Запись данных в файл
-            FileWriter writer = new FileWriter(name_file + ".hex");
-            writer.write(hashed_data);
-            writer.close();
-        } catch (IOException e) {
-            println("Error when writing to a file!");
-            e.printStackTrace();
-        }
+        String hashed_data = hashed(all_data);
+        FileWriter writer = new FileWriter(name_file + ".hex");
+        writer.write(hashed_data);
+        writer.close();
+        return new String[] {"the file was saved successfully.", "green"};
     }
 
-    public static void read(String snp_data) throws Exception {
+    public static String[] read(String snp_data) throws Exception {
         String str = "";
         String name_file = gen_name_file(snp_data);
-        BufferedReader reader = new BufferedReader(new FileReader(name_file + ".hex"));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            str += line;
-        } reader.close();
-        str = rehashed(str);
-        println(str);
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(name_file + ".hex"));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                str += line;
+            } reader.close();
+            str = rehashed(str);
+            println("\033[H\033[J\u001B[0m" + str);
+            println("Press any button to exit");
+            System.in.read();
+            print("\033[H\033[J");
+            return new String[] {"file was read successfully", "green"};
+        } catch (FileNotFoundException e) {
+            return new String[] {"file not found.", "red"};
+        }
+
     }
 
     public static String gen_name_file(String snp) throws Exception {
@@ -191,7 +209,7 @@ public class Main {
         return hex;
     }
 
-    public static String rehashed(String hex) throws IOException {
+    public static String rehashed(String hex) {
         String ascii = "";
         String str = "";
         String[] chars = hex.split(" ");
@@ -206,7 +224,6 @@ public class Main {
     }
 
     public static String data(String[] snp, String dmy_data, String description) {
-        // Возврат данных, как должны выглядеть
         return ("Surname: " + snp[0] + "\n" +
                 "Name: " + snp[1] + "\n" +
                 "Patronymic: " + snp[2] + "\n" +
@@ -242,13 +259,12 @@ public class Main {
         return d + "." + m + "." + y;
     }
 
-    // Для чтения файла
     public static Object readJsonSimpleDemo(String filename) throws Exception {
         FileReader reader = new FileReader(filename);
         JSONParser jsonParser = new JSONParser();
         return jsonParser.parse(reader);
     }
-    // Сокращённые функции для удобства
+
     public static void print(String args) {
         System.out.print(args);
     }
